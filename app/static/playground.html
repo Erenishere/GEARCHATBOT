@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gear AI · Chat</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f3f6f8; color: #152535; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .shell { display: grid; grid-template-columns: 300px minmax(0, 1fr); min-height: 100vh; max-width: 1450px; margin: 0 auto; background: #fff; box-shadow: 0 0 60px #21384912; }
+    aside { background: #122b39; color: #e7f1f4; padding: 32px 25px; display: flex; flex-direction: column; gap: 26px; }
+    .brand { display: flex; align-items: center; gap: 11px; font-size: 22px; font-weight: 800; letter-spacing: -.05em; }
+    .mark { display: grid; place-items: center; width: 35px; height: 35px; border-radius: 11px; background: #34c99b; color: #0b2830; font-weight: 900; }
+    .eyebrow { color: #a3b9c2; font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; margin: 0 0 10px; }
+    aside h1 { font-size: 27px; line-height: 1.17; letter-spacing: -.04em; margin: 0 0 12px; }
+    aside p { color: #c1d3da; line-height: 1.55; margin: 0; font-size: 14px; }
+    .mode { border: 1px solid #41606a; border-radius: 15px; padding: 16px; background: #1a3948; }
+    .mode strong { color: #fff; display: block; margin-bottom: 7px; }
+    .mode p { font-size: 13px; }
+    .token { border: 1px solid #41606a; border-radius: 15px; padding: 16px; background: #1a3948; }
+    .token label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; }
+    .token input { width: 100%; padding: 11px 12px; color: #152535; border-radius: 10px; border: 1px solid #9eb4bd; outline: none; }
+    .token .token-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 9px; }
+    .token .token-actions span { color: #c1d3da; font-size: 12px; }
+    .token button { border: 1px solid #64818b; border-radius: 8px; background: transparent; color: #e7f1f4; padding: 5px 9px; font-size: 12px; }
+    .token p { margin-top: 10px; font-size: 11px; }
+    .privacy { font-size: 12px; color: #9bb5bf; }
+    .privacy a { color: #9ce8c8; }
+    main { display: flex; flex-direction: column; min-height: 100vh; min-width: 0; }
+    header { padding: 22px 32px; border-bottom: 1px solid #e2e9ed; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    header h2 { font-size: 18px; margin: 0 0 3px; }
+    header p { font-size: 13px; color: #647985; margin: 0; }
+    .reset { border: 1px solid #d7e2e7; border-radius: 9px; background: #fff; color: #254554; font-size: 13px; font-weight: 700; padding: 9px 12px; white-space: nowrap; }
+    .reset:hover { background: #f2f7f8; }
+    .banner { background: #fff4d9; border-bottom: 1px solid #f1dfaf; color: #76501b; padding: 10px 32px; font-size: 13px; line-height: 1.4; }
+    .banner.live { background: #e8f8f1; border-color: #bee9d5; color: #24664e; }
+    .banner.issue { background: #fff0e9; border-color: #f6d4c3; color: #8c3d26; }
+    .feed { flex: 1; overflow: auto; padding: 30px 32px 18px; display: flex; flex-direction: column; gap: 20px; }
+    .message { max-width: 780px; width: fit-content; }
+    .message.user { align-self: flex-end; }
+    .message.assistant { align-self: flex-start; width: min(100%, 780px); }
+    .bubble { line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; padding: 14px 17px; border-radius: 16px; font-size: 15px; }
+    .user .bubble { background: #183d4b; color: white; border-bottom-right-radius: 4px; }
+    .assistant .bubble { background: #eef4f6; border-bottom-left-radius: 4px; }
+    .meta { margin: 7px 2px 0; font-size: 11px; color: #728893; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(225px, 1fr)); gap: 11px; margin-top: 12px; }
+    .card { border: 1px solid #d9e5e8; border-radius: 14px; padding: 15px; background: #fff; box-shadow: 0 5px 18px #15253509; }
+    .card .number { color: #22866a; font-size: 11px; text-transform: uppercase; font-weight: 800; letter-spacing: .08em; }
+    .card h3 { font-size: 15px; margin: 7px 0 9px; }
+    .card .line { color: #667d88; font-size: 13px; margin: 5px 0; }
+    .card .price { color: #163e4a; font-weight: 800; font-size: 18px; margin-top: 12px; }
+    .card .price small { color: #81949c; font-weight: 500; font-size: 11px; display: block; }
+    .card button { width: 100%; background: #e6f7f0; color: #167354; border: 0; border-radius: 9px; padding: 9px; font-size: 12px; font-weight: 800; margin-top: 12px; }
+    .card button:hover { background: #d1f0e2; }
+    .suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .suggestions button { border: 1px solid #cfe1e2; background: #fff; color: #205a60; border-radius: 999px; font-size: 12px; padding: 8px 11px; }
+    .suggestions button:hover { background: #e9f6f4; }
+    .composer { padding: 16px 32px 24px; border-top: 1px solid #e2e9ed; background: #fff; }
+    form { display: flex; gap: 9px; }
+    form input { flex: 1; min-width: 0; border: 1px solid #cad9df; border-radius: 11px; padding: 14px 15px; outline: none; }
+    form input:focus { border-color: #25ac80; box-shadow: 0 0 0 3px #25ac8022; }
+    form button { border: 0; border-radius: 11px; padding: 0 22px; background: #25b98b; color: #092c2b; font-weight: 800; }
+    form button:hover { background: #30c99a; }
+    form button:disabled { opacity: .6; cursor: wait; }
+    .hint { font-size: 11px; color: #83949d; margin: 9px 1px 0; }
+    @media (max-width: 760px) { .shell { display: block; } aside { padding: 17px 20px; gap: 14px; } aside h1 { font-size: 20px; } aside > div:nth-child(2) p { display: none; } main { min-height: calc(100vh - 180px); } header, .feed, .composer { padding-left: 18px; padding-right: 18px; } .banner { padding-left: 18px; padding-right: 18px; } .feed { min-height: 46vh; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="brand"><span class="mark">G</span> Gear AI</div>
+      <div><div class="eyebrow">Vehicle search</div><h1>Find a car through conversation.</h1><p id="hero-copy">Search and refine Gear vehicle listings, then ask about the booking flow.</p></div>
+      <div class="mode" aria-live="polite"><strong id="mode-title">Checking mode…</strong><p id="mode-description">Connecting to the local app.</p></div>
+      <div class="token">
+        <label for="gear-token">Gear Bearer token · local testing</label>
+        <input id="gear-token" type="password" placeholder="Paste token here" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <div class="token-actions"><span id="token-status" role="status">Guest mode · no token</span><button id="clear-token" type="button">Clear token</button></div>
+        <p>Guest search works without a token. Protected Gear checks use this token; it is not saved and clears on refresh.</p>
+      </div>
+      <div class="privacy">Local chat interface · <a href="/docs">API docs</a></div>
+    </aside>
+    <main>
+      <header><div><h2>Vehicle search assistant</h2><p>Refreshing keeps this conversation; New chat clears its filters.</p></div><button class="reset" id="reset" type="button">New chat</button></header>
+      <div class="banner" id="banner" role="status">Checking data source…</div>
+      <div class="feed" id="feed" role="log" aria-live="polite" aria-label="Chat messages"></div>
+      <div class="composer"><form id="chat-form"><input id="message" aria-label="Your message" placeholder="Ask for a car, area, or budget…" maxlength="2000" required autocomplete="off"><button id="send" type="submit">Send</button></form><div class="hint">Try “Show cars in Dubai under AED 500”. Suggested chips fill the message box for editing.</div></div>
+    </main>
+  </div>
+  <script>
+    const feed = document.getElementById('feed');
+    const input = document.getElementById('message');
+    const sendButton = document.getElementById('send');
+    const gearTokenInput = document.getElementById('gear-token');
+    const tokenStatus = document.getElementById('token-status');
+    let mode = 'unknown';
+    let extractorMode = 'local';
+    const transcriptKey = 'gear-ai-playground-transcript-v1';
+    const openingSuggestions = ['Find a car', 'Cars near me', 'Family trip', 'Budget cars', 'How booking works'];
+    let transcript = [];
+
+    function responseForDisplay(response) {
+      if (!response) return null;
+      return {
+        status: response.status,
+        action: response.action,
+        vehicles: response.vehicles || [],
+        suggestions: response.suggestions || [],
+        available: response.available,
+      };
+    }
+
+    function saveTranscript() {
+      try {
+        sessionStorage.setItem(transcriptKey, JSON.stringify(transcript.slice(-100)));
+      } catch (_) {
+        // The chat still works when browser storage is unavailable.
+      }
+    }
+
+    function clearTranscript() {
+      transcript = [];
+      try { sessionStorage.removeItem(transcriptKey); } catch (_) {}
+    }
+
+    function updateTokenStatus() {
+      tokenStatus.textContent = gearTokenInput.value.trim() ? 'Token ready · not verified' : 'Guest mode · no token';
+    }
+
+    gearTokenInput.addEventListener('input', updateTokenStatus);
+    window.addEventListener('pageshow', () => {
+      gearTokenInput.value = '';
+      updateTokenStatus();
+    });
+    document.getElementById('clear-token').addEventListener('click', () => {
+      gearTokenInput.value = '';
+      updateTokenStatus();
+      gearTokenInput.focus();
+    });
+
+    function futureDate(days) {
+      const date = new Date();
+      date.setDate(date.getDate() + days);
+      return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+    }
+
+    function node(tag, className, content) {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      if (content != null) element.textContent = content;
+      return element;
+    }
+
+    function addSuggestions(parent, suggestions) {
+      if (!suggestions.length) return;
+      const row = node('div', 'suggestions');
+      for (const suggestion of suggestions) {
+        const button = node('button', '', suggestion);
+        button.type = 'button';
+        button.addEventListener('click', () => {
+          let prompt = suggestion;
+          if (suggestion === 'Change budget' || suggestion === 'Increase budget') prompt = 'Under AED 800';
+          if (suggestion === 'Nearby areas') prompt = 'In Abu Dhabi';
+          if (suggestion === 'Change dates') prompt = futureDate(2) + ' to ' + futureDate(4);
+          if (suggestion === 'Cheapest first') prompt = 'Sort by cheapest first';
+          if (suggestion === 'Find a car') prompt = 'Show cars in Dubai under AED 500';
+          if (suggestion === 'Cars near me') prompt = 'Cars near me';
+          if (suggestion === 'Family trip') prompt = 'I need something for a family trip in Dubai';
+          if (suggestion === 'Budget cars') prompt = 'Budget cars in Dubai under AED 300';
+          if (suggestion === 'How booking works') prompt = 'How does booking work?';
+          if (suggestion === 'Show similar cars') prompt = 'Show similar cars';
+          if (suggestion.startsWith('Check availability')) {
+            const option = suggestion.match(/option\s+(\d+)/i);
+            prompt = 'Is option ' + (option ? option[1] : '1') + ' available from ' + futureDate(2) + ' 10:00 to ' + futureDate(4) + ' 18:00?';
+          }
+          input.value = prompt;
+          input.focus();
+        });
+        row.append(button);
+      }
+      parent.append(row);
+    }
+
+    function appendMessage(role, message, response, persist = true) {
+      const wrapper = node('div', 'message ' + role);
+      wrapper.append(node('div', 'bubble', message));
+      if (response) {
+        if (response.action && response.action.type === 'SIGN_IN') {
+          const prompt = response.status === 'authentication_required' ?
+            (gearTokenInput.value.trim() ? 'Gear did not accept this token. Paste a fresh token, then try again.' : 'Paste your Gear Bearer token in the test panel, then try again.') :
+            'Continue in the Gear app to sign in and book.';
+          wrapper.append(node('div', '', prompt));
+        }
+        if (response.vehicles && response.vehicles.length) {
+          const cards = node('div', 'cards');
+          response.vehicles.forEach((car, index) => {
+            const card = node('div', 'card');
+            card.append(node('div', 'number', response.status === 'results' ? 'Option ' + (index + 1) : 'Selected vehicle'));
+            card.append(node('h3', '', car.title || 'Untitled vehicle'));
+            if (car.location) card.append(node('div', 'line', '📍 ' + car.location));
+            if (car.car_type_name) card.append(node('div', 'line', car.car_type_name));
+            if (typeof car.seats === 'number') card.append(node('div', 'line', car.seats + ' seats'));
+            if (car.fuel_type) card.append(node('div', 'line', car.fuel_type));
+            if (car.transmission) card.append(node('div', 'line', car.transmission + ' transmission'));
+            if (typeof car.rating === 'number') card.append(node('div', 'line', '★ ' + car.rating.toFixed(1) + ' rating'));
+            if (typeof car.price === 'number') {
+              card.append(node('div', 'price', 'AED ' + car.price.toLocaleString() + '/day'));
+            }
+            if (car.match_reason) card.append(node('div', 'line', car.match_reason));
+            if (response.status === 'results') {
+              const view = node('button', '', 'View details');
+              view.type = 'button';
+              view.addEventListener('click', () => { input.value = 'View option ' + (index + 1); input.focus(); });
+              card.append(view);
+            }
+            cards.append(card);
+          });
+          wrapper.append(cards);
+        }
+        addSuggestions(wrapper, response.suggestions || []);
+      }
+      feed.append(wrapper);
+      feed.scrollTop = feed.scrollHeight;
+      if (persist) {
+        transcript.push({role, message, response: responseForDisplay(response)});
+        transcript = transcript.slice(-100);
+        saveTranscript();
+      }
+    }
+
+    function restoreTranscript() {
+      try {
+        const stored = JSON.parse(sessionStorage.getItem(transcriptKey) || '[]');
+        if (!Array.isArray(stored) || !stored.length) return false;
+        transcript = stored.slice(-100);
+        for (const entry of transcript) {
+          if (!entry || !['user', 'assistant'].includes(entry.role) || typeof entry.message !== 'string') continue;
+          appendMessage(entry.role, entry.message, entry.response || null, false);
+        }
+        return feed.childElementCount > 0;
+      } catch (_) {
+        clearTranscript();
+        return false;
+      }
+    }
+
+    async function loadMode() {
+      try {
+        const response = await fetch('/api/v1/agent/meta');
+        if (!response.ok) throw new Error('The app did not return its mode.');
+        const meta = await response.json();
+        const previousMode = mode;
+        mode = meta.mode;
+        extractorMode = meta.extractor;
+        const banner = document.getElementById('banner');
+        const title = document.getElementById('mode-title');
+        const description = document.getElementById('mode-description');
+        if (previousMode !== 'unknown' && previousMode !== mode) {
+          feed.replaceChildren();
+          clearTranscript();
+          appendMessage('assistant', "Hey — tell me where you're going, your dates, budget, or the kind of car you need.");
+        }
+        if (mode === 'demo') {
+          banner.className = 'banner';
+          title.textContent = 'Offline demo';
+          description.textContent = extractorMode === 'hosted' ?
+            'Uses a fictional vehicle catalog and the configured ' + meta.llm_provider + ' model for requirement extraction.' :
+            'Uses a small, fictional vehicle catalog and a local parser. No Gear or LLM requests are made.';
+          document.getElementById('hero-copy').textContent = 'Try the rental concierge with sample listings.';
+          banner.textContent = 'Sample data — prices and availability here are for testing only.';
+        } else {
+          title.textContent = 'Gear rental assistant';
+          description.textContent = 'Search and check cars here. Sign in through Gear when you are ready to book.';
+          document.getElementById('hero-copy').textContent = 'Find and compare rentals through conversation.';
+          if (meta.gear_configured) {
+            banner.className = 'banner live';
+            banner.textContent = "Connected — I'll search verified Gear listings for you.";
+          } else {
+            banner.className = 'banner issue';
+            banner.textContent = "Search isn't configured on this server yet. Ask your admin to set up Gear search.";
+          }
+        }
+      } catch (error) {
+        document.getElementById('banner').className = 'banner issue';
+        document.getElementById('banner').textContent = 'Could not read the app mode. Check that the local server is running.';
+      }
+    }
+
+    async function contextForMessage(message) {
+      if (!/\b(?:near me|my location|nearby)\b/i.test(message) || !navigator.geolocation) return {};
+      try {
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: false, timeout: 8000, maximumAge: 300000,
+          });
+        });
+        return {lat: position.coords.latitude, lng: position.coords.longitude};
+      } catch (_) {
+        return {};
+      }
+    }
+
+    document.getElementById('chat-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const message = input.value.trim();
+      if (!message || sendButton.disabled) return;
+      input.value = '';
+      appendMessage('user', message);
+      sendButton.disabled = true;
+      try {
+        const headers = {'Content-Type': 'application/json', 'X-AI-Session-Transport': 'cookie'};
+        if (mode !== 'demo' && gearTokenInput.value.trim()) {
+          const token = gearTokenInput.value.trim().replace(/^Bearer\s+/i, '');
+          if (!token || /\s/.test(token)) throw new Error('Paste a Gear token without spaces or line breaks.');
+          headers.Authorization = 'Bearer ' + token;
+        }
+        const body = {message, context: await contextForMessage(message)};
+        const response = await fetch('/api/v1/agent/chat', {method: 'POST', headers, credentials: 'same-origin', body: JSON.stringify(body)});
+        const result = await response.json();
+        if (!response.ok) throw new Error(typeof result.detail === 'string' ? result.detail : 'The chat request failed.');
+        appendMessage('assistant', result.message, result);
+      } catch (error) {
+        appendMessage('assistant', 'Request failed: ' + error.message);
+      } finally {
+        sendButton.disabled = false;
+        input.focus();
+      }
+    });
+
+    document.getElementById('reset').addEventListener('click', async () => {
+      try {
+        const response = await fetch('/api/v1/agent/session/reset', {
+          method: 'POST', credentials: 'same-origin',
+          headers: {'X-AI-Session-Transport': 'cookie'},
+        });
+        if (!response.ok) throw new Error('The server did not reset the conversation.');
+        clearTranscript();
+        feed.replaceChildren();
+        appendMessage('assistant', "Hey — I'm here to help you find the right rental. Tell me what you need: a location, dates, budget, or even just the kind of trip you're planning.", {suggestions: openingSuggestions});
+        input.focus();
+      } catch (error) {
+        appendMessage('assistant', 'Could not start a new chat: ' + error.message);
+      }
+    });
+
+    if (!restoreTranscript()) {
+      appendMessage('assistant', "Hey — I'm here to help you find the right rental. Tell me what you need: a location, dates, budget, or even just the kind of trip you're planning.", {suggestions: openingSuggestions});
+    }
+    loadMode();
+    setInterval(loadMode, 10000);
+  </script>
+</body>
+</html>
